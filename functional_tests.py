@@ -154,8 +154,10 @@ class TestDelete(unittest.TestCase):
         self.putURL = r.headers['location']
 
     def testGoodRequestOne(self):
+        self.assertEqual(requests.get(self.putURL).status_code, 200)
         r = requests.delete(self.putURL)
         self.assertEqual(r.status_code, 200)
+        self.assertEqual(requests.get(self.putURL).status_code, 404)
 
     def testBadRequestOne(self):
         """
