@@ -96,7 +96,7 @@ class TestPut(unittest.TestCase):
         """
         xml = "<project><name>solum2</name><description>Updated solum stuff.</description></project>"
         r = requests.put(self.putURL, data=xml, headers=header)
-        self.assertEqual(r.status_code, 204)
+        self.assertTrue(r.status_code == 204 or r.status_code == 200)
 
     def testBadRequestOne(self):
         """
