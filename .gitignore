@@ -1,1 +1,15 @@
-/target/
+*~
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+.fuse*
+
+# javadoc #
+doc/
+
+# python
+__pycache__/
+*.pyc
