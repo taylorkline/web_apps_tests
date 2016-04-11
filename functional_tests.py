@@ -104,7 +104,7 @@ class TestPut(unittest.TestCase):
         """
         xml = "<project><name>solum2</name><description>Updated solum stuff.</description></project>"
         r = requests.put(base_url + "-1", data=xml, headers=header)
-        self.assertEqual(r.status_code, 404)
+        self.assertTrue(r.status_code == 400 or r.status_code == 404)
 
     def testBadRequestTwo(self):
         """
@@ -112,7 +112,15 @@ class TestPut(unittest.TestCase):
         """
         xml = "<project><name>solum2</name><description>Updated solum stuff.</description></project>"
         r = requests.put(base_url + "asdf", data=xml, headers=header)
-        self.assertEqual(r.status_code, 404)
+        self.assertTrue(r.status_code == 400 or r.status_code == 404)
+        
+    def testBadRequestThree(self):
+        """
+        Try to PUT with a empty name
+        """
+        xml = "<project><name></name><description>Updated solum stuff.</description></project>"
+        r = requests.put(base_url + "1", data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
 
 class TestGet(unittest.TestCase):
     def setUp(self):
