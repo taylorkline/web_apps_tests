@@ -4,7 +4,6 @@ from xml.etree import ElementTree
 
 """
 This module uses the Python requests library to test assignment 4.
-
 You should:
     - Have the requests library for Python installed.
     - Have your assignment 4 code running on Tomcat.
@@ -113,13 +112,13 @@ class TestPut(unittest.TestCase):
         xml = "<project><name>solum2</name><description>Updated solum stuff.</description></project>"
         r = requests.put(base_url + "asdf", data=xml, headers=header)
         self.assertTrue(r.status_code == 400 or r.status_code == 404)
-        
+
     def testBadRequestThree(self):
         """
         Try to PUT with a empty name
         """
         xml = "<project><name></name><description>Updated solum stuff.</description></project>"
-        r = requests.put(base_url + "1", data=xml, headers=header)
+        r = requests.put(self.putURL, data=xml, headers=header)
         self.assertEqual(r.status_code, 400)
 
 class TestGet(unittest.TestCase):
@@ -127,7 +126,7 @@ class TestGet(unittest.TestCase):
         """
         This depends on POST.
         """
-        xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
+        xml = "<project><name>solum</name><description>Project representing solum</description></project>"
         r = requests.post(base_url, data=xml, headers=header)
         self.putURL = r.headers['location']
 
@@ -135,22 +134,24 @@ class TestGet(unittest.TestCase):
         r = requests.get(self.putURL)
         self.assertEqual(r.status_code, 200)
         tree = ElementTree.fromstring(r.content)
-        self.assertEqual(tree.get("id"), self.putURL.split("/")[-1])
-        # TODO: You should manually check the full response body.
+        self.assertEqual(tree.find("name").text, "solum")
+        self.assertEqual(tree.find("description").text, "Project representing solum")
+        # ID is apparently required to be an attribute of the  root element, rather than an element itself
+        self.assertEqual(tree.attrib['id'], self.putURL.split("/")[-1])
 
     def testBadRequestOne(self):
         """
         Try GET with a bad ID number
         """
         r = requests.get(base_url + "-1")
-        self.assertEqual(r.status_code, 404);
+        self.assertEqual(r.status_code, 404)
 
     def testBadRequestTwo(self):
         """
         Try GET with a bad ID string
         """
         r = requests.get(base_url + "asdf")
-        self.assertEqual(r.status_code, 404);
+        self.assertEqual(r.status_code, 404)
 
 class TestDelete(unittest.TestCase):
     def setUp(self):
@@ -172,14 +173,14 @@ class TestDelete(unittest.TestCase):
         Try DELETE with a bad ID number
         """
         r = requests.delete(base_url + "-1")
-        self.assertEqual(r.status_code, 404);
+        self.assertEqual(r.status_code, 404)
 
     def testBadRequestTwo(self):
         """
         Try DELETE with a bad ID string
         """
         r = requests.delete(base_url + "asdf")
-        self.assertEqual(r.status_code, 404);
+        self.assertEqual(r.status_code, 404)
 
 if __name__ == '__main__':
     unittest.main()
