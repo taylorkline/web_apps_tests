@@ -3,14 +3,14 @@ import requests
 from xml.etree import ElementTree
 
 """
-This module uses the Python requests library to test assignment 4.
+This module uses the Python requests library to test assignment 5.
 You should:
     - Have the requests library for Python installed.
-    - Have your assignment 4 code running on Tomcat.
+    - Have your assignment 5 code running on Tomcat.
     - Run this script with python3.4
 """
 
-base_url = "http://localhost:8080/assignment4/myeavesdrop/projects/"
+base_url = "http://localhost:8080/assignment5/myeavesdrop/projects/"
 header = {'Content-Type': 'application/xml'}
 
 class TestPost(unittest.TestCase):
