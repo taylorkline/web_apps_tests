@@ -1,3 +1,3 @@
-# Test Cases for Modern Web Apps Assignment 4
+# Test Cases for Modern Web Apps Assignments
 
 Instructions for running are in the script. Pull requests welcome.
