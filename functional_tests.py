@@ -26,14 +26,14 @@ class TestPost(unittest.TestCase):
         """
         Missing closing XML tag.
         """
-        xml = "<project><name>solum</name><description>Project respresenting solum</description>"
+        xml = "<project><name>solum</name><description>Project representing solum</description>"
         r = requests.post(base_url, data=xml, headers=header)
         self.assertEqual(r.status_code, 400)
 
         """
         Plural 'projects'
         """
-        xml = "<projects><name>solum</name><description>Project respresenting solum</description></projects>"
+        xml = "<projects><name>solum</name><description>Project representing solum</description></projects>"
         r = requests.post(base_url, data=xml, headers=header)
         self.assertEqual(r.status_code, 400)
 
@@ -84,7 +84,7 @@ class TestPost(unittest.TestCase):
         Attempt to add invalid meeting to valid project.
         """
         # Create valid project.
-        xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
+        xml = "<project><name>solum</name><description>Project representing solum</description></project>"
         r = requests.post(base_url, data=xml, headers=header)
         self.assertEqual(r.status_code, 201)
         self.assertIn(base_url, r.headers['location'])
@@ -116,7 +116,7 @@ class TestPost(unittest.TestCase):
         """
         Direct from assignment page.
         """
-        xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
+        xml = "<project><name>solum</name><description>Project representing solum</description></project>"
         r = requests.post(base_url, data=xml, headers=header)
         self.assertEqual(r.status_code, 201)
         self.assertIn(base_url, r.headers['location'])
@@ -133,7 +133,7 @@ class TestPut(unittest.TestCase):
         """
         This depends on POST.
         """
-        xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
+        xml = "<project><name>solum</name><description>Project representing solum</description></project>"
         meetingxml = "<meeting><name>m1</name><year>2014</year></meeting>"
         r = requests.post(base_url, data=xml, headers=header)
         self.putURL = r.headers['location']
@@ -227,7 +227,7 @@ class TestDelete(unittest.TestCase):
         """
         This depends on POST.
         """
-        xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
+        xml = "<project><name>solum</name><description>Project representing solum</description></project>"
         r = requests.post(base_url, data=xml, headers=header)
         self.putURL = r.headers['location']
         meetingxml = "<meeting><name>MAY_NOT_BE_DELETED</name><year>2014</year></meeting>"
