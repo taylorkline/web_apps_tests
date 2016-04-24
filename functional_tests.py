@@ -128,47 +128,49 @@ class TestPost(unittest.TestCase):
         self.assertEqual(r.status_code, 201)
         self.assertIn(project_resource, r.headers['location'])
 
-# class TestPut(unittest.TestCase):
-#     def setUp(self):
-#         """
-#         This depends on POST.
-#         """
-#         xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
-#         r = requests.post(base_url, data=xml, headers=header)
-#         self.putURL = r.headers['location']
-# 
-#     def testGoodRequestOne(self):
-#         """
-#         Try to update what already exists.
-#         """
-#         xml = "<project><name>solum2</name><description>Updated solum stuff.</description></project>"
-#         r = requests.put(self.putURL, data=xml, headers=header)
-#         self.assertTrue(r.status_code == 204 or r.status_code == 200)
-# 
-#     def testBadRequestOne(self):
-#         """
-#         Try to PUT with a bad ID number
-#         """
-#         xml = "<project><name>solum2</name><description>Updated solum stuff.</description></project>"
-#         r = requests.put(base_url + "-1", data=xml, headers=header)
-#         self.assertTrue(r.status_code == 400 or r.status_code == 404)
-# 
-#     def testBadRequestTwo(self):
-#         """
-#         Try to PUT with a bad ID string
-#         """
-#         xml = "<project><name>solum2</name><description>Updated solum stuff.</description></project>"
-#         r = requests.put(base_url + "asdf", data=xml, headers=header)
-#         self.assertTrue(r.status_code == 400 or r.status_code == 404)
-# 
-#     def testBadRequestThree(self):
-#         """
-#         Try to PUT with a empty name
-#         """
-#         xml = "<project><name></name><description>Updated solum stuff.</description></project>"
-#         r = requests.put(self.putURL, data=xml, headers=header)
-#         self.assertEqual(r.status_code, 400)
-# 
+class TestPut(unittest.TestCase):
+    def setUp(self):
+        """
+        This depends on POST.
+        """
+        xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
+        meetingxml = "<meeting><name>m1</name><year>2014</year></meeting>"
+        r = requests.post(base_url, data=xml, headers=header)
+        self.putURL = r.headers['location']
+        r = requests.post(self.putURL + "/meetings", data=meetingxml, headers=header)
+        self.meetingURL = r.headers['location']
+
+    def testGoodRequests(self):
+        """
+        Good PUTs to meetings.
+        """
+        newmeetingxml = "<meeting><name>m2</name><year>1994</year></meeting>"
+        r = requests.put(self.meetingURL, data=newmeetingxml, headers=header)
+        self.assertTrue(r.status_code == 204 or r.status_code == 200)
+        # TODO: This could use some GET calls to verify update
+
+    def testBadRequests(self):
+        """
+        Bad PUTs to meetings.
+        """
+        # Bad xml, like POST
+        newmeetingxml = "<meeting><name> </name><year>1994</year></meeting>"
+        r = requests.put(self.meetingURL, data=newmeetingxml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+        newmeetingxml = "<meeting><name>m2</name><year>1994</year></meeting>"
+        # Bad meeting ID
+        r = requests.put("/".join(self.meetingURL.split("/")[:-1]) + "/232321211313232",
+                         data=newmeetingxml, headers=header)
+        self.assertEqual(r.status_code, 404)
+
+        # Good meeting ID, unrelated project ID
+        bad_URL = self.meetingURL.split("/")
+        bad_URL[-3] = "1"
+        r = requests.put("/".join(bad_URL), data=newmeetingxml, headers=header)
+        self.assertEqual(r.status_code, 404)
+
+
 class TestGet(unittest.TestCase):
     def setUp(self):
         """
@@ -220,34 +222,40 @@ class TestGet(unittest.TestCase):
         r = requests.get(base_url + "asdf")
         self.assertEqual(r.status_code, 404)
 
-# class TestDelete(unittest.TestCase):
-#     def setUp(self):
-#         """
-#         This depends on POST.
-#         """
-#         xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
-#         r = requests.post(base_url, data=xml, headers=header)
-#         self.putURL = r.headers['location']
-# 
-#     def testGoodRequestOne(self):
-#         self.assertEqual(requests.get(self.putURL).status_code, 200)
-#         r = requests.delete(self.putURL)
-#         self.assertEqual(r.status_code, 200)
-#         self.assertEqual(requests.get(self.putURL).status_code, 404)
-# 
-#     def testBadRequestOne(self):
-#         """
-#         Try DELETE with a bad ID number
-#         """
-#         r = requests.delete(base_url + "-1")
-#         self.assertEqual(r.status_code, 404)
-# 
-#     def testBadRequestTwo(self):
-#         """
-#         Try DELETE with a bad ID string
-#         """
-#         r = requests.delete(base_url + "asdf")
-#         self.assertEqual(r.status_code, 404)
+class TestDelete(unittest.TestCase):
+    def setUp(self):
+        """
+        This depends on POST.
+        """
+        xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
+        r = requests.post(base_url, data=xml, headers=header)
+        self.putURL = r.headers['location']
+        meetingxml = "<meeting><name>MAY_NOT_BE_DELETED</name><year>2014</year></meeting>"
+        r = requests.post(self.putURL + "/meetings", data=meetingxml, headers=header)
+        self.meetingURL = r.headers['location']
+
+    def testGoodRequestOne(self):
+        meetingxml = "<meeting><name>SHOULD_BE_DELETED</name><year>2014</year></meeting>"
+        r = requests.post(self.putURL + "/meetings", data=meetingxml, headers=header)
+        self.assertEqual(requests.get(self.putURL).status_code, 200)
+        r = requests.delete(self.putURL)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(requests.get(self.putURL).status_code, 404)
+        # TODO: Some unit tests could check the database itself to make sure meeting is deleted
+
+    def testBadRequestOne(self):
+        """
+        Try DELETE with a bad ID number
+        """
+        r = requests.delete(base_url + "-1")
+        self.assertEqual(r.status_code, 404)
+
+    def testBadRequestTwo(self):
+        """
+        Try DELETE with a bad ID string
+        """
+        r = requests.delete(base_url + "asdf")
+        self.assertEqual(r.status_code, 404)
 
 if __name__ == '__main__':
     unittest.main()
