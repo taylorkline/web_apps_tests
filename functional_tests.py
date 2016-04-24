@@ -13,6 +13,100 @@ You should:
 base_url = "http://localhost:8080/assignment5/myeavesdrop/projects/"
 header = {'Content-Type': 'application/xml'}
 
+
+# Thanks to @tireymorris
+class TestPostMeeting(unittest.TestCase):
+
+    def setUp(self):
+        """
+        This depends on POST.
+        """
+        xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
+        r = requests.post(base_url, data=xml, headers=header)
+        self.putURL = r.headers['location'] + "/meetings"
+
+    def testBadRequestOne(self):
+        """
+        Empty string.
+        """
+        xml = ""
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestTwo(self):
+        """
+        Missing closing XML tag.
+        """
+        xml = "<meeting><name>m1</name><year>2016</year>"
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestThree(self):
+        """
+        Plural 'meetings'
+        """
+        xml = "<meetings><name>m1</name><year>2016</year></meetings>"
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestFour(self):
+        """
+        Missing name
+        """
+        xml = "<meeting><name></name><year>2016</year></meeting>"
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestFive(self):
+        """
+        Missing year
+        """
+        xml = "<meeting><name>m1</name><year></year></meeting>"
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestSix(self):
+        """
+        Empty name.
+        """
+        xml = "<meeting><name>    </name><year>2016</year></meeting>"
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestSeven(self):
+        """
+        Empty year.
+        """
+        xml = "<meeting><name>m1</name><year>   </year></meeting>"
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestEight(self):
+        """
+        String for year.
+        """
+        xml = "<meeting><name>m1</name><year>This is a bad year</year></meeting>"
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestNine(self):
+        """
+        Bad project ID
+        """
+        xml = "<meeting><name>m1</name><year>2016</year></meeting>"
+        r = requests.post(base_url + "/projects/0/meetings", data=xml, headers=header)
+        self.assertEqual(r.status_code, 404)
+
+    def testGoodRequestOne(self):
+        """
+        Direct from assignment page.
+        """
+        xml = "<meeting><name>m1</name><year>2014</year></meeting>"
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 201)
+        self.assertIn(base_url, r.headers['location'])
+
+
 class TestPost(unittest.TestCase):
 
     def testBadRequests(self):
@@ -111,7 +205,6 @@ class TestPost(unittest.TestCase):
         r = requests.post(project_resource + "/meetings", data=xml, headers=header)
         self.assertEqual(r.status_code, 400)
 
-
     def testGoodRequests(self):
         """
         Direct from assignment page.
@@ -127,6 +220,77 @@ class TestPost(unittest.TestCase):
         r = requests.post(project_resource + "/meetings", data=xml, headers=header)
         self.assertEqual(r.status_code, 201)
         self.assertIn(project_resource, r.headers['location'])
+
+
+# Thanks to @tireymorris
+class TestPutMeeting(unittest.TestCase):
+    def setUp(self):
+        """
+        This depends on POST.
+        """
+        xml = "<project><name>solum</name><description>Project respresenting solum</description></project>"
+        r = requests.post(base_url, data=xml, headers=header)
+        self.putURL = r.headers['location'] + "/meetings"
+        xml = "<meeting><name>m1</name><year>2014</year></meeting>"
+        r = requests.post(self.putURL, data=xml, headers=header)
+        self.putURL = r.headers['location']
+
+    def testGoodRequestOne(self):
+        """
+        Try to update what already exists.
+        """
+        xml = "<meeting><name>m1</name><year>2016</year></meeting>"
+        r = requests.put(self.putURL, data=xml, headers=header)
+        self.assertIn(r.status_code, (200, 204))
+
+    def testBadRequestOne(self):
+        """
+        Try to PUT with a bad ID number
+        """
+        xml = "<meeting><name>m1</name><year>2014</year></meeting>"
+        r = requests.put(self.putURL + '9999999999999999999', data=xml, headers=header)
+        self.assertIn(r.status_code, (400, 404))
+
+    def testBadRequestTwo(self):
+        """
+        Try to PUT with a bad ID string
+        """
+        xml = "<meeting><name>m1</name><year>2014</year></meeting>"
+        r = requests.put(self.putURL + 'this should not work', data=xml, headers=header)
+        self.assertIn(r.status_code, (400, 404))
+
+    def testBadRequestThree(self):
+        """
+        Try to PUT with a empty name
+        """
+        xml = "<meeting><name></name><year>2014</year></meeting>"
+        r = requests.put(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestFour(self):
+        """
+        Try to PUT with a empty year
+        """
+        xml = "<meeting><name>m1</name><year></year></meeting>"
+        r = requests.put(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestFive(self):
+        """
+        Try to PUT with a string year
+        """
+        xml = "<meeting><name>m1</name><year>This is a bad year</year></meeting>"
+        r = requests.put(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
+    def testBadRequestSix(self):
+        """
+        Try to PUT with a negative year
+        """
+        xml = "<meeting><name>m1</name><year>-1</year></meeting>"
+        r = requests.put(self.putURL, data=xml, headers=header)
+        self.assertEqual(r.status_code, 400)
+
 
 class TestPut(unittest.TestCase):
     def setUp(self):
@@ -221,6 +385,7 @@ class TestGet(unittest.TestCase):
         """
         r = requests.get(base_url + "asdf")
         self.assertEqual(r.status_code, 404)
+
 
 class TestDelete(unittest.TestCase):
     def setUp(self):
