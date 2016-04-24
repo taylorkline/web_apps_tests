@@ -169,38 +169,57 @@ class TestPost(unittest.TestCase):
 #         r = requests.put(self.putURL, data=xml, headers=header)
 #         self.assertEqual(r.status_code, 400)
 # 
-# class TestGet(unittest.TestCase):
-#     def setUp(self):
-#         """
-#         This depends on POST.
-#         """
-#         xml = "<project><name>solum</name><description>Project representing solum</description></project>"
-#         r = requests.post(base_url, data=xml, headers=header)
-#         self.putURL = r.headers['location']
-# 
-#     def testGoodRequestOne(self):
-#         r = requests.get(self.putURL)
-#         self.assertEqual(r.status_code, 200)
-#         tree = ElementTree.fromstring(r.content)
-#         self.assertEqual(tree.find("name").text, "solum")
-#         self.assertEqual(tree.find("description").text, "Project representing solum")
-#         # ID is apparently required to be an attribute of the  root element, rather than an element itself
-#         self.assertEqual(tree.attrib['id'], self.putURL.split("/")[-1])
-# 
-#     def testBadRequestOne(self):
-#         """
-#         Try GET with a bad ID number
-#         """
-#         r = requests.get(base_url + "-1")
-#         self.assertEqual(r.status_code, 404)
-# 
-#     def testBadRequestTwo(self):
-#         """
-#         Try GET with a bad ID string
-#         """
-#         r = requests.get(base_url + "asdf")
-#         self.assertEqual(r.status_code, 404)
-# 
+class TestGet(unittest.TestCase):
+    def setUp(self):
+        """
+        This depends on POST.
+        """
+        xml = "<project><name>solum</name><description>Project representing solum</description></project>"
+        r = requests.post(base_url, data=xml, headers=header)
+        self.putURL = r.headers['location']
+
+    def testGoodRequestOne(self):
+        r = requests.get(self.putURL)
+        self.assertEqual(r.status_code, 200)
+        tree = ElementTree.fromstring(r.content)
+        self.assertEqual(tree.find("name").text, "solum")
+        self.assertEqual(tree.find("description").text, "Project representing solum")
+        # ID is apparently required to be an attribute of the  root element, rather than an element itself
+        self.assertEqual(tree.attrib['id'], self.putURL.split("/")[-1])
+
+        xml = "<meeting><name>m1</name><year>2014</year></meeting>"
+        r = requests.post(self.putURL + "/meetings", data=xml, headers=header)
+        self.assertEqual(r.status_code, 201)
+        self.assertIn(self.putURL, r.headers['location'])
+
+        r = requests.get(self.putURL)
+        tree = ElementTree.fromstring(r.content)
+        self.assertTrue(tree.find("meetings") is not None)
+
+        xml = "<meeting><name>m2</name><year>2016</year></meeting>"
+        r = requests.post(self.putURL + "/meetings", data=xml, headers=header)
+        self.assertEqual(r.status_code, 201)
+        self.assertIn(self.putURL, r.headers['location'])
+
+        r = requests.get(self.putURL)
+        tree = ElementTree.fromstring(r.content)
+        self.assertTrue(tree.find("meetings") is not None)
+        # TODO: This needs some improvement. Manual checking required until then.
+
+    def testBadRequestOne(self):
+        """
+        Try GET with a bad ID number
+        """
+        r = requests.get(base_url + "-1")
+        self.assertEqual(r.status_code, 404)
+
+    def testBadRequestTwo(self):
+        """
+        Try GET with a bad ID string
+        """
+        r = requests.get(base_url + "asdf")
+        self.assertEqual(r.status_code, 404)
+
 # class TestDelete(unittest.TestCase):
 #     def setUp(self):
 #         """
